@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<!--
+  Web App: ?page=Logout → ล้าง session แล้วไป ?page=Login
+-->
+<html lang="th">
+<head>
+  <base target="_top">
+  <script>
+    window.__WEB_APP_BASE__ = <?!= JSON.stringify(webAppBaseUrl || '') ?>;
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+  <title>ออกจากระบบ · ตำแรด แซ่บนัว</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #e8ecf0;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <p style="text-align:center;font-size:0.95rem;">กำลังออกจากระบบ...</p>
+  <script>
+    (function () {
+      try {
+        localStorage.removeItem('pos_admin_session');
+      } catch (e) {}
+
+      function isWebAppExecUrl(u) {
+        if (!u || typeof u !== 'string') return false;
+        return /https:\/\/script\.google\.com\/macros\/[^/]+\/[^/]+\/exec$/i.test(String(u).replace(/\/?$/, ''));
+      }
+
+      function goLogin(base) {
+        var isGas = typeof google !== 'undefined' && google.script && google.script.run;
+        var qs = 'page=Login';
+        if (isGas) qs += '&gas=' + Date.now();
+        window.location.replace(base.replace(/\/?$/, '') + '?' + qs);
+      }
+
+      var isGas = typeof google !== 'undefined' && google.script && google.script.run;
+      var base = (typeof window.__WEB_APP_BASE__ === 'string' && window.__WEB_APP_BASE__) ? window.__WEB_APP_BASE__.replace(/\/?$/, '') : '';
+
+      if (isWebAppExecUrl(base)) {
+        goLogin(base);
+      } else if (isGas) {
+        google.script.run
+          .withSuccessHandler(function (url) {
+            if (url && isWebAppExecUrl(url)) {
+              goLogin(url);
+            } else {
+              window.location.replace('login.html');
+            }
+          })
+          .withFailureHandler(function () {
+            window.location.replace('login.html');
+          })
+          .getWebAppExecUrl();
+      } else {
+        window.location.replace('login.html');
+      }
+    })();
+  </script>
+</body>
+</html>
